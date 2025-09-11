@@ -36,7 +36,7 @@ class AppRoute {
     Map<String, Widget Function(BuildContext)> appRoutes = {};
 
     // Ruta inicial
-    appRoutes.addAll({'home': (BuildContext context) => const LoginScreen()});
+    appRoutes.addAll({'home': (BuildContext context) => const ProjectConfigScreen()});
 
     // Agregar todas las pantallas dinámicamente
     for (final option in menuOptions) {

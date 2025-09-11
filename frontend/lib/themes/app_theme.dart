@@ -1,106 +1,93 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Paleta de colores principal
-  static const Color primary = Color.fromARGB(
-    255,
-    63,
-    157,
-    181,
-  ); // Color principal
-  static const Color secondary = Color(0xFF2196F3); // Azul secundario
-  static const Color accent = Color(0xFFE91E63); // Rosa acento
-  static const Color background = Color(0xFFF5F7FA); // Fondo claro
-  static const Color cardBg = Colors.white;
-  static const Color textPrimary = Color(0xFF212121); // Texto oscuro
-  static const Color textSecondary = Color(0xFF757575); // Texto secundario
+  // Paleta de colores
+  static const Color primaryLight = Color(0xFF2196F3); // Azul claro
+  static const Color primaryDark = Color(0xFF0D47A1);  // Azul oscuro
+  static const Color accentColor = Color(0xFFFFC107);  // Ámbar
+  static const Color errorColor = Color(0xFFE53935);   // Rojo
 
-  // Colores para categorías médicas (más armoniosos)
-  static const Color bloodType = Color(0xFFE57373); // Rojo suave
-  static const Color allergies = Color(0xFFFFB74D); // Naranja suave
-  static const Color diseases = Color(0xFF9575CD); // Púrpura suave
-  static const Color measures = Color(0xFF4FC3F7); // Azul claro
-  static const Color surgeries = Color(0xFF7986CB); // Indigo suave
-  static const Color hospitalizations = Color(0xFF4DB6AC); // Verde azulado
-  static const Color familyHistory = Color(0xFF81C784); // Verde suave
-  static const Color treatments = Color(0xFFA1887F); // Marrón suave
-
-  // Estilos de texto
-  static const TextStyle heading = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.bold,
-    color: textPrimary,
-    letterSpacing: 0.5,
-  );
-
-  static const TextStyle subheading = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: textPrimary,
-  );
-
-  static const TextStyle cardTitle = TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: textPrimary,
-  );
-
-  static const TextStyle cardContent = TextStyle(
-    fontSize: 14,
-    color: textSecondary,
-    height: 1.4,
-  );
-
-  // Decoraciones para widgets
-  static BoxDecoration cardDecoration = BoxDecoration(
-    color: cardBg,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        offset: const Offset(0, 4),
-        blurRadius: 10,
-      ),
-    ],
-  );
-
-  static InputDecoration inputDecoration(
-    String label,
-    String hint, {
-    IconData? icon,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      prefixIcon: icon != null ? Icon(icon, color: primary) : null,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
+  // Tema Claro
+  static final ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: primaryLight,
+    scaffoldBackgroundColor: Colors.white,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: primaryLight,
+      foregroundColor: Colors.white,
+      elevation: 2,
+    ),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: primaryLight,
+      foregroundColor: Colors.white,
+    ),
+    colorScheme: const ColorScheme.light(
+      primary: primaryLight,
+      secondary: accentColor,
+      error: errorColor,
+    ),
+    textTheme: const TextTheme(
+      headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
+      titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87),
+      bodyMedium: TextStyle(fontSize: 16, color: Colors.black87),
+      bodySmall: TextStyle(fontSize: 14, color: Colors.black54),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primary, width: 2),
+        borderSide: const BorderSide(color: primaryLight, width: 2),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.red.shade300, width: 1),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryLight,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
-      labelStyle: TextStyle(color: Colors.grey.shade600),
-    );
-  }
+    ),
+  );
 
-  static ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
-    backgroundColor: primary,
-    foregroundColor: Colors.white,
-    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    elevation: 2,
+  // Tema Oscuro
+  static final ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primaryColor: const Color.fromARGB(255, 56, 117, 209),
+    scaffoldBackgroundColor: const Color.fromARGB(255, 24, 23, 23),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color.fromARGB(255, 45, 109, 206),
+      foregroundColor: Colors.white,
+      elevation: 2,
+    ),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: primaryDark,
+      foregroundColor: Colors.white,
+    ),
+    colorScheme: const ColorScheme.dark(
+      primary: primaryDark,
+      secondary: accentColor,
+      error: errorColor,
+    ),
+    textTheme: const TextTheme(
+      headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+      titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white70),
+      bodyMedium: TextStyle(fontSize: 16, color: Colors.white70),
+      bodySmall: TextStyle(fontSize: 14, color: Colors.white60),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color.fromARGB(255, 43, 103, 194), width: 2),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color.fromARGB(255, 48, 111, 206),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      ),
+    ),
   );
 }
