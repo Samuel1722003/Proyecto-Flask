@@ -23,6 +23,7 @@ class ErrorScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
+                    // ignore: deprecated_member_use
                     color: colorScheme.primary.withOpacity(0.08),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
@@ -38,10 +39,12 @@ class ErrorScreen extends StatelessWidget {
                     curve: Curves.easeInOut,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
+                      // ignore: deprecated_member_use
                       color: colorScheme.error.withOpacity(0.1),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
+                          // ignore: deprecated_member_use
                           color: colorScheme.error.withOpacity(0.2),
                           blurRadius: 16,
                           spreadRadius: 2,
@@ -73,6 +76,7 @@ class ErrorScreen extends StatelessWidget {
                     errorMessage ??
                         'Algo salió mal. Intenta nuevamente o contacta al soporte si el problema persiste.',
                     style: theme.textTheme.bodyMedium?.copyWith(
+                      // ignore: deprecated_member_use
                       color: colorScheme.onSurface.withOpacity(0.8),
                     ),
                     textAlign: TextAlign.center,

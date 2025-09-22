@@ -4,12 +4,14 @@ class TextInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType? keyboardType;
+  final bool enabled;
 
   const TextInputField({
     super.key,
     required this.label,
     required this.controller,
     this.keyboardType,
+    this.enabled = true, // ✅ habilitado por defecto
   });
 
   @override
@@ -19,6 +21,7 @@ class TextInputField extends StatelessWidget {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        enabled: enabled, // ✅ ahora soporta deshabilitar
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),

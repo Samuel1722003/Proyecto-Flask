@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/widgets/widgets.dart';
+import 'package:frontend/themes/app_theme.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,49 +9,181 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  void _register() {
-    final name = _nameController.text;
-    // ignore: unused_local_variable
-    final email = _emailController.text;
-    final password = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
-    if (password != confirmPassword) {
+  void _register() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+
+      await Future.delayed(const Duration(seconds: 2)); // Simulación de API
+
+      setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Las contraseñas no coinciden")),
+        const SnackBar(content: Text("Registro exitoso ✅")),
       );
-      return;
-    }
 
-    // Aquí iría la lógica de conexión con la API Flask
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Usuario $name registrado con éxito")),
-    );
+      Navigator.pushReplacementNamed(context, "LoginScreen");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Registro"),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            CustomTextField(labelText: "Nombre completo", controller: _nameController),
-            CustomTextField(labelText: "Correo electrónico", controller: _emailController),
-            CustomTextField(labelText: "Contraseña", controller: _passwordController, obscureText: true),
-            CustomTextField(labelText: "Confirmar contraseña", controller: _confirmPasswordController, obscureText: true),
-            const SizedBox(height: 20),
-            CustomButton(text: "Registrarse", onPressed: _register),
-          ],
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Card(
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Encabezado
+                    const Icon(Icons.person_add, size: 80, color: AppTheme. primaryLight),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Crear cuenta",
+                      style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Regístrate para continuar",
+                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Nombre completo
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: "Nombre completo",
+                        prefixIcon: Icon(Icons.person),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return "Ingrese su nombre";
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Correo
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: "Correo electrónico",
+                        prefixIcon: Icon(Icons.email),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Ingrese su correo";
+                        }
+                        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                        if (!emailRegex.hasMatch(value)) {
+                          return "Correo inválido";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Contraseña
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: "Contraseña",
+                        prefixIcon: const Icon(Icons.lock),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Ingrese su contraseña";
+                        }
+                        if (value.length < 6) {
+                          return "Debe tener al menos 6 caracteres";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Confirmar contraseña
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: "Confirmar contraseña",
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return "Confirme su contraseña";
+                        if (value != _passwordController.text) {
+                          return "Las contraseñas no coinciden";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Botón de registro
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _register,
+                        style: AppTheme.lightTheme.elevatedButtonTheme.style,
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text("Registrarse"),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Link a login
+                    TextButton(
+                      onPressed: () => Navigator.pushReplacementNamed(context, "LoginScreen"),
+                      child: const Text("¿Ya tienes cuenta? Inicia sesión"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -14,12 +14,12 @@ class ProjectConfigScreen extends StatefulWidget {
 class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController fundingAmountController = TextEditingController();
-  final TextEditingController keywordsController = TextEditingController();
   final TextEditingController objectivesGeneralController = TextEditingController();
   final TextEditingController objectivesSpecificController = TextEditingController();
   final TextEditingController scopeController = TextEditingController();
   final TextEditingController justificationController = TextEditingController();
   final TextEditingController resultsCriteriaController = TextEditingController();
+  final TextEditingController keywordsController = TextEditingController();
 
   String? selectedArea;
   String? selectedType;
@@ -28,147 +28,210 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
   String? selectedAudience;
   bool registerPatent = false;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  List<String> keywords = [];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Configurar Proyecto"),
-        centerTitle: true,
-        elevation: 2,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+  void _addKeywords(String input) {
+    final tokens = input.split(RegExp(r'[;,]')).map((e) => e.trim()).where((e) => e.isNotEmpty);
+    setState(() {
+      keywords.addAll(tokens);
+    });
+    keywordsController.clear();
+  }
+
+  void _logout() {
+    Navigator.pushNamedAndRemoveUntil(context, "LoginScreen", (route) => false);
+  }
+
+  Widget _sectionCard({required String title, required List<Widget> children}) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle("Información general", theme),
-            DropdownField(
-              label: "Área de estudio",
-              items: ["Ciencia", "Tecnología", "Innovación"],
-              value: selectedArea,
-              onChanged: (val) => setState(() => selectedArea = val),
-            ),
-            DropdownField(
-              label: "Tipo de proyecto",
-              items: ["Divulgación", "Investigación", "Prototipo", "Concurso"],
-              value: selectedType,
-              onChanged: (val) => setState(() => selectedType = val),
-            ),
-            DropdownField(
-              label: "Participantes",
-              items: ["Grupal", "Individual"],
-              value: selectedParticipants,
-              onChanged: (val) => setState(() => selectedParticipants = val),
-            ),
-            const SizedBox(height: 20),
-
-            _buildSectionTitle("Financiamiento", theme),
-            DropdownField(
-              label: "Fuente de financiamiento",
-              items: [
-                "Gobierno Federal",
-                "Gobierno Estatal",
-                "Gobierno Municipal",
-                "Iniciativa Privada",
-                "Sin financiamiento"
-              ],
-              value: selectedFunding,
-              onChanged: (val) => setState(() => selectedFunding = val),
-            ),
-            TextInputField(
-              label: "Monto aproximado",
-              controller: fundingAmountController,
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 20),
-
-            _buildSectionTitle("Detalles del proyecto", theme),
-            DropdownField(
-              label: "Público objetivo",
-              items: [
-                "Público general",
-                "Sector escolar",
-                "Autoridades gubernamentales",
-                "Iniciativa privada"
-              ],
-              value: selectedAudience,
-              onChanged: (val) => setState(() => selectedAudience = val),
-            ),
-            TextInputField(
-              label: "Título del proyecto",
-              controller: titleController,
-            ),
-            TextInputField(
-              label: "Palabras clave",
-              controller: keywordsController,
-            ),
-            const SizedBox(height: 20),
-
-            _buildSectionTitle("Redacción", theme),
-            MultilineInputField(
-              label: "Objetivo general",
-              controller: objectivesGeneralController,
-            ),
-            MultilineInputField(
-              label: "Objetivos específicos",
-              controller: objectivesSpecificController,
-            ),
-            MultilineInputField(
-              label: "Alcance",
-              controller: scopeController,
-            ),
-            MultilineInputField(
-              label: "Justificación",
-              controller: justificationController,
-            ),
-            MultilineInputField(
-              label: "Criterios de resultados",
-              controller: resultsCriteriaController,
-            ),
-            const SizedBox(height: 10),
-
-            CheckboxListTile(
-              title: const Text("¿Deseas registrar ante IMPI o Patente?"),
-              value: registerPatent,
-              onChanged: (val) => setState(() => registerPatent = val ?? false),
-              activeColor: colorScheme.primary,
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            const SizedBox(height: 20),
-
-            // Botón
-            SizedBox(
-              width: double.infinity,
-              child: SubmitButton(
-                text: "Guardar proyecto",
-                onPressed: () {
-                  // TODO: integrar backend
-                  print("Proyecto guardado: ${titleController.text}");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Proyecto '${titleController.text}' guardado"),
-                    ),
-                  );
-                },
-              ),
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            ...children.expand((w) => [w, const SizedBox(height: 16)]).toList(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        title,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: theme.colorScheme.primary,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Configurar Proyecto"),
+        actions: [
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: "Cerrar sesión",
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Column(
+              children: [
+                // Datos generales
+                _sectionCard(
+                  title: "Datos generales",
+                  children: [
+                    DropdownField(
+                      label: "Área de estudio",
+                      items: ["Ciencia", "Tecnología", "Innovación"],
+                      value: selectedArea,
+                      onChanged: (val) => setState(() => selectedArea = val),
+                    ),
+                    DropdownField(
+                      label: "Tipo de proyecto",
+                      items: ["Divulgación", "Investigación", "Prototipo", "Concurso"],
+                      value: selectedType,
+                      onChanged: (val) => setState(() => selectedType = val),
+                    ),
+                    DropdownField(
+                      label: "Participantes",
+                      items: ["Grupal", "Individual"],
+                      value: selectedParticipants,
+                      onChanged: (val) => setState(() => selectedParticipants = val),
+                    ),
+                    TextInputField(
+                      label: "Título del proyecto",
+                      controller: titleController,
+                    ),
+                  ],
+                ),
+
+                // Financiamiento
+                _sectionCard(
+                  title: "Financiamiento",
+                  children: [
+                    DropdownField(
+                      label: "Fuente de financiamiento",
+                      items: [
+                        "Gobierno Federal",
+                        "Gobierno Estatal",
+                        "Gobierno Municipal",
+                        "Iniciativa Privada",
+                        "Sin financiamiento"
+                      ],
+                      value: selectedFunding,
+                      onChanged: (val) {
+                        setState(() {
+                          selectedFunding = val;
+                          if (val == "Sin financiamiento") {
+                            fundingAmountController.text = "0";
+                          } else {
+                            fundingAmountController.clear();
+                          }
+                        });
+                      },
+                    ),
+                    TextInputField(
+                      label: "Monto aproximado",
+                      controller: fundingAmountController,
+                      keyboardType: TextInputType.number,
+                      enabled: selectedFunding != "Sin financiamiento",
+                    ),
+                    DropdownField(
+                      label: "Público al que va dirigido",
+                      items: [
+                        "Público general",
+                        "Sector escolar",
+                        "Autoridades gubernamentales",
+                        "Iniciativa privada"
+                      ],
+                      value: selectedAudience,
+                      onChanged: (val) => setState(() => selectedAudience = val),
+                    ),
+                  ],
+                ),
+
+                // Palabras clave
+                _sectionCard(
+                  title: "Palabras clave",
+                  children: [
+                    TextField(
+                      controller: keywordsController,
+                      decoration: const InputDecoration(
+                        labelText: "Escribe palabras clave",
+                        hintText: "Ejemplo: IA, robótica; nanotecnología",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.key),
+                      ),
+                      onSubmitted: _addKeywords,
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: keywords
+                          .map((word) => Chip(
+                                label: Text(word),
+                                deleteIcon: const Icon(Icons.close),
+                                onDeleted: () => setState(() => keywords.remove(word)),
+                              ))
+                          .toList(),
+                    )
+                  ],
+                ),
+
+                // Objetivos
+                _sectionCard(
+                  title: "Objetivos y Alcance",
+                  children: [
+                    MultilineInputField(
+                      label: "Objetivo general",
+                      controller: objectivesGeneralController,
+                      maxLength: 500,
+                    ),
+                    MultilineInputField(
+                      label: "Objetivos específicos",
+                      controller: objectivesSpecificController,
+                      maxLength: 500,
+                    ),
+                    MultilineInputField(
+                      label: "Alcance",
+                      controller: scopeController,
+                      maxLength: 500,
+                    ),
+                    MultilineInputField(
+                      label: "Justificación",
+                      controller: justificationController,
+                      maxLength: 500,
+                    ),
+                    MultilineInputField(
+                      label: "Criterios para medir resultados",
+                      controller: resultsCriteriaController,
+                      maxLength: 500,
+                    ),
+                  ],
+                ),
+
+                CheckboxListTile(
+                  title: const Text("¿Deseas registrar ante IMPI o Patente?"),
+                  value: registerPatent,
+                  onChanged: (val) => setState(() => registerPatent = val ?? false),
+                ),
+
+                const SizedBox(height: 20),
+                SubmitButton(
+                  text: "Guardar proyecto",
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("✅ Proyecto guardado con éxito")),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
