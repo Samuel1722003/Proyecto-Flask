@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/api_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,30 +16,30 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   bool isPasswordVisible = false;
 
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+void _login() async {
+  if (_formKey.currentState!.validate()) {
+    final email = emailController.text;
+    final password = passwordController.text;
 
-    setState(() => isLoading = true);
+    final result = await ApiService.login(email, password);
 
-    // Simulación de login con retraso
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() => isLoading = false);
-
-    // Ejemplo de validación dummy
-    if (emailController.text == "admin@test.com" &&
-        passwordController.text == "1234") {
+    if (result.containsKey("token")) {
+      await ApiService.saveToken(result["token"]);
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Inicio de sesión exitoso")),
+        SnackBar(content: Text("Login exitoso")),
       );
-      // Aquí puedes navegar a otra pantalla
-      Navigator.pushReplacementNamed(context, 'ProjectConfigScreen');
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacementNamed(context, "ProjectConfigScreen");
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Credenciales incorrectas")),
+        SnackBar(content: Text("Error: ${result['msg']}")),
       );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +106,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ? Icons.visibility_off
                                 : Icons.visibility,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              isPasswordVisible = !isPasswordVisible;
-                            });
+                          onPressed: () async {
+                            try {
+    final result = await ApiService.login(
+      emailController.text,
+      passwordController.text,
+    );
+    // ignore: avoid_print
+    print("Login OK: $result");
+  } catch (e) {
+    // ignore: avoid_print
+    print("Error: $e");
+  }
                           },
                         ),
                       ),

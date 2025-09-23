@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/api_service.dart';
 import 'package:frontend/widgets/dropdown_field.dart';
 import 'package:frontend/widgets/text_input_field.dart';
 import 'package:frontend/widgets/multiline_input_field.dart';
@@ -14,11 +15,14 @@ class ProjectConfigScreen extends StatefulWidget {
 class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController fundingAmountController = TextEditingController();
-  final TextEditingController objectivesGeneralController = TextEditingController();
-  final TextEditingController objectivesSpecificController = TextEditingController();
+  final TextEditingController objectivesGeneralController =
+      TextEditingController();
+  final TextEditingController objectivesSpecificController =
+      TextEditingController();
   final TextEditingController scopeController = TextEditingController();
   final TextEditingController justificationController = TextEditingController();
-  final TextEditingController resultsCriteriaController = TextEditingController();
+  final TextEditingController resultsCriteriaController =
+      TextEditingController();
   final TextEditingController keywordsController = TextEditingController();
 
   String? selectedArea;
@@ -31,7 +35,10 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
   List<String> keywords = [];
 
   void _addKeywords(String input) {
-    final tokens = input.split(RegExp(r'[;,]')).map((e) => e.trim()).where((e) => e.isNotEmpty);
+    final tokens = input
+        .split(RegExp(r'[;,]'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty);
     setState(() {
       keywords.addAll(tokens);
     });
@@ -40,6 +47,36 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
 
   void _logout() {
     Navigator.pushNamedAndRemoveUntil(context, "LoginScreen", (route) => false);
+  }
+
+  void _saveProject() async {
+    final token = await ApiService.getToken();
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error: No has iniciado sesión")),
+      );
+      return;
+    }
+
+    final projectData = {
+      "title": titleController.text,
+      "summary": justificationController.text,
+      "profile_id": 1, // aquí obtienes el perfil real creado antes
+      "status": "borrador",
+    };
+
+    final result = await ApiService.createProject(token, projectData);
+
+    if (result.containsKey("msg")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Proyecto guardado: ${result['msg']}")),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${result['error']}")));
+    }
   }
 
   Widget _sectionCard({required String title, required List<Widget> children}) {
@@ -54,7 +91,7 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
           children: [
             Text(title, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
-            ...children.expand((w) => [w, const SizedBox(height: 16)]).toList(),
+            ...children.expand((w) => [w, const SizedBox(height: 16)]),
           ],
         ),
       ),
@@ -93,7 +130,12 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                     ),
                     DropdownField(
                       label: "Tipo de proyecto",
-                      items: ["Divulgación", "Investigación", "Prototipo", "Concurso"],
+                      items: [
+                        "Divulgación",
+                        "Investigación",
+                        "Prototipo",
+                        "Concurso",
+                      ],
                       value: selectedType,
                       onChanged: (val) => setState(() => selectedType = val),
                     ),
@@ -101,7 +143,8 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                       label: "Participantes",
                       items: ["Grupal", "Individual"],
                       value: selectedParticipants,
-                      onChanged: (val) => setState(() => selectedParticipants = val),
+                      onChanged:
+                          (val) => setState(() => selectedParticipants = val),
                     ),
                     TextInputField(
                       label: "Título del proyecto",
@@ -121,7 +164,7 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                         "Gobierno Estatal",
                         "Gobierno Municipal",
                         "Iniciativa Privada",
-                        "Sin financiamiento"
+                        "Sin financiamiento",
                       ],
                       value: selectedFunding,
                       onChanged: (val) {
@@ -147,10 +190,11 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                         "Público general",
                         "Sector escolar",
                         "Autoridades gubernamentales",
-                        "Iniciativa privada"
+                        "Iniciativa privada",
                       ],
                       value: selectedAudience,
-                      onChanged: (val) => setState(() => selectedAudience = val),
+                      onChanged:
+                          (val) => setState(() => selectedAudience = val),
                     ),
                   ],
                 ),
@@ -171,14 +215,19 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                     ),
                     Wrap(
                       spacing: 8,
-                      children: keywords
-                          .map((word) => Chip(
-                                label: Text(word),
-                                deleteIcon: const Icon(Icons.close),
-                                onDeleted: () => setState(() => keywords.remove(word)),
-                              ))
-                          .toList(),
-                    )
+                      children:
+                          keywords
+                              .map(
+                                (word) => Chip(
+                                  label: Text(word),
+                                  deleteIcon: const Icon(Icons.close),
+                                  onDeleted:
+                                      () =>
+                                          setState(() => keywords.remove(word)),
+                                ),
+                              )
+                              .toList(),
+                    ),
                   ],
                 ),
 
@@ -217,16 +266,15 @@ class _ProjectConfigScreenState extends State<ProjectConfigScreen> {
                 CheckboxListTile(
                   title: const Text("¿Deseas registrar ante IMPI o Patente?"),
                   value: registerPatent,
-                  onChanged: (val) => setState(() => registerPatent = val ?? false),
+                  onChanged:
+                      (val) => setState(() => registerPatent = val ?? false),
                 ),
 
                 const SizedBox(height: 20),
                 SubmitButton(
                   text: "Guardar proyecto",
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("✅ Proyecto guardado con éxito")),
-                    );
+                    _saveProject();
                   },
                 ),
               ],

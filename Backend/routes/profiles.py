@@ -1,36 +1,69 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from db import get_connection
 
-profiles_bp = Blueprint('profiles', __name__)
+profile_bp = Blueprint("profiles", __name__)
 
-@profiles_bp.route("/", methods=["POST"])
+@profile_bp.route("/", methods=["POST"])
+@jwt_required()
 def create_profile():
+    user_id = int(get_jwt_identity())
     data = request.json
-    user_id = data.get("user_id")
-    name = data.get("name")
-    area_id = data.get("area_id")
-    project_type_id = data.get("project_type_id")
-    title = data.get("title")
 
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO profiles (user_id, name, area_id, project_type_id, title)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (user_id, name, area_id, project_type_id, title))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return {"msg": "Perfil creado exitosamente"}
-
-@profiles_bp.route("/<int:user_id>", methods=["GET"])
-def get_profiles(user_id):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM profiles WHERE user_id = %s", (user_id,))
-    profiles = cursor.fetchall()
-    cursor.close()
-    conn.close()
 
-    return {"profiles": profiles}
+    try:
+        # Insertar perfil
+        cursor.execute("""
+            INSERT INTO profiles (
+                user_id, name, area_id, project_type_id,
+                participant_type_id, financing_type_id, financing_amount,
+                audience_type_id, title, wants_patent, notes
+            ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            user_id,
+            data["name"],
+            data.get("area_id"),
+            data.get("project_type_id"),
+            data.get("participant_type_id"),
+            data.get("financing_type_id"),
+            data.get("financing_amount", 0),
+            data.get("audience_type_id"),
+            data.get("title"),
+            data.get("wants_patent", 0),
+            data.get("notes")
+        ))
+        profile_id = cursor.lastrowid
+
+        # Objetivos
+        for obj in data.get("objectives", []):
+            cursor.execute("""
+                INSERT INTO profile_objectives (profile_id, objective_type, description)
+                VALUES (%s, %s, %s)
+            """, (profile_id, obj["type"], obj["description"][:500]))
+
+        # Keywords
+        for kw in data.get("keywords", []):
+            cursor.execute("""
+                INSERT INTO profile_keywords (profile_id, keyword)
+                VALUES (%s, %s)
+            """, (profile_id, kw.strip()))
+
+        # Criterios
+        for cr in data.get("criteria", []):
+            cursor.execute("""
+                INSERT INTO profile_criteria (profile_id, description)
+                VALUES (%s, %s)
+            """, (profile_id, cr))
+
+        conn.commit()
+        return jsonify({"msg": "Perfil creado", "profile_id": profile_id}), 201
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"msg": "Error al crear perfil", "error": str(e)}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/themes/app_theme.dart';
+import 'package:frontend/services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,26 +16,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
-  void _register() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+void _register() async {
+  final email = _emailController.text;
+  final password = _passwordController.text;
+  final name = _nameController.text;
+  final phone = _phoneController.text;
 
-      await Future.delayed(const Duration(seconds: 2)); // Simulación de API
+  final result = await ApiService.register(email, password, name, phone);
 
-      setState(() => _isLoading = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registro exitoso ✅")),
-      );
-
-      Navigator.pushReplacementNamed(context, "LoginScreen");
-    }
+  if (result["msg"] == "Usuario registrado") {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Registro exitoso, ahora inicia sesión")),
+    );
+    Navigator.pushReplacementNamed(context, "LoginScreen");
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error: ${result['msg']}")),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

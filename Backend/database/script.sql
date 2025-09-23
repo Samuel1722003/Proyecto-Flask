@@ -41,8 +41,7 @@ CREATE TABLE users (
 CREATE TABLE profiles (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    first_name VARCHAR(75) NOT NULL,
-    last_name VARCHAR(75) NOT NULL,
+    name VARCHAR(75) NOT NULL,
     area_id INT NULL,
     project_type_id INT NULL,
     participant_type_id INT NULL,
