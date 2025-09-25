@@ -1,62 +1,87 @@
 import requests
+import json
 
+# Ajusta esta URL a tu backend real
 BASE_URL = "http://127.0.0.1:5000/api"
+LOGIN_URL = f"{BASE_URL}/auth/login"
+PROFILE_URL = f"{BASE_URL}/profiles/create"
+PROJECT_URL = f"{BASE_URL}/projects/create"
 
-def safe_print_response(name, response):
-    try:
-        print(f"{name}:", response.status_code, response.json())
-    except Exception:
-        print(f"{name}:", response.status_code, response.text)
+# Credenciales de prueba
+payload = {
+    "email": "admin@test.com",   # cámbialo por un usuario válido
+    "password": "1234"           # cámbialo por la contraseña real
+}
 
-# 1. Registrar usuario
-def test_register():
-    url = f"{BASE_URL}/auth/register"
-    data = {
-        "email": "admin@test.com",
-        "password": "1234",
-        "name": "Admin",
-        "phone": "10987654321",
-    }
-    response = requests.post(url, json=data)
-    print("Registro:", response.status_code, response.json())
+try:
+    print(f"➡️ Enviando POST a {LOGIN_URL} con payload: {payload}")
+    response = requests.post(LOGIN_URL, json=payload)
 
-# 2. Iniciar sesión y obtener token
-def test_login():
-    url = f"{BASE_URL}/auth/login"
-    data = {
-        "email": "admin@test.com",
-        "password": "1234"
-    }
-    response = requests.post(url, json=data)
-    print("Login:", response.status_code, response.json())
-    if response.status_code == 200:
-        return response.json()["token"]
-    return None
+    print(f"Status Code: {response.status_code}")
+    print(f"Raw Body: {response.text}")
 
-# 3. Insertar perfil con token
-def test_create_profile(token):
-    url = f"{BASE_URL}/profiles/"
-    headers = {"Authorization": f"Bearer {token}"}
-    data = {
-        "name": "Proyecto de Energía Solar",
+    data = response.json()
+    print("✅ JSON decodificado:")
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+
+    # 1. Obtener token
+    token = data.get("access_token") or data.get("token")
+    if not token:
+        print("❌ No se recibió token, no se puede continuar")
+        exit()
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    # 2. Crear perfil de prueba
+    profile_data = {
+        "name": "Perfil de prueba",
         "area_id": 1,
-        "project_type_id": 2,
+        "project_type_id": 1,
         "participant_type_id": 1,
-        "financing_type_id": 5,
-        "financing_amount": 0,
+        "financing_type_id": 1,
+        "financing_amount": 5000,
         "audience_type_id": 1,
-        "title": "Mi Proyecto",
+        "title": "Título de perfil de prueba",
         "wants_patent": 0,
-        "notes": "Proyecto de prueba con script Python",
-        "objectives": [{"type": "general", "description": "Lograr un resultado"}],
-        "keywords": ["IA", "Machine Learning"],
-        "criteria": ["Evaluación por expertos"]
+        "notes": "Notas de prueba",
+        "objectives": [
+            {"type": "general", "description": "Objetivo general de prueba"},
+            {"type": "especifico", "description": "Objetivo específico de prueba"}
+        ],
+        "keywords": ["python", "api", "test"],
+        "criteria": ["criterio 1", "criterio 2"]
     }
-    response = requests.post(url, json=data, headers=headers)
-    safe_print_response("Crear perfil", response)
 
-if __name__ == "__main__":
-    test_register()
-    token = test_login()
-    if token:
-        test_create_profile(token)
+    print(f"\n➡️ Enviando POST a {PROFILE_URL} con profile_data")
+    profile_resp = requests.post(PROFILE_URL, headers=headers, json=profile_data)
+    print(f"Status Code: {profile_resp.status_code}")
+    print(f"Raw Body: {profile_resp.text}")
+
+    profile_json = profile_resp.json()
+    print("✅ Perfil creado:")
+    print(json.dumps(profile_json, indent=2, ensure_ascii=False))
+
+    profile_id = profile_json.get("profile", {}).get("profile_id")
+    if not profile_id:
+        print("❌ No se recibió profile_id, no se puede crear proyecto")
+        exit()
+
+    # 3. Crear proyecto de prueba
+    project_data = {
+        "title": "Proyecto de prueba",
+        "summary": "Este es un proyecto de prueba creado desde test_api",
+        "profile_id": profile_id,
+        "status": "borrador"
+    }
+
+    print(f"\n➡️ Enviando POST a {PROJECT_URL} con project_data")
+    project_resp = requests.post(PROJECT_URL, headers=headers, json=project_data)
+    print(f"Status Code: {project_resp.status_code}")
+    print(f"Raw Body: {project_resp.text}")
+
+    project_json = project_resp.json()
+    print("✅ Proyecto creado:")
+    print(json.dumps(project_json, indent=2, ensure_ascii=False))
+
+except Exception as e:
+    print(f"❌ Error de conexión: {e}")

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Paleta de colores
-  static const Color primaryLight = Color(0xFF2196F3); // Azul claro
-  static const Color primaryDark = Color(0xFF0D47A1);  // Azul oscuro
-  static const Color accentColor = Color(0xFFFFC107);  // Ámbar
-  static const Color errorColor = Color(0xFFE53935);   // Rojo
+  static const Color primaryLight = Color.fromARGB(255, 245, 170, 32); // Amarillo claro
+  static const Color primaryDark = Color.fromARGB(255, 184, 126, 1);  // Amarillo oscuro
+  static const Color accentColor = Color.fromARGB(255, 222, 238, 0); // Amarillo
+  static const Color errorColor = Color(0xFFE53935); // Rojo
 
   // Tema Claro
   static final ThemeData lightTheme = ThemeData(

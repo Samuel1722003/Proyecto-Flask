@@ -7,7 +7,7 @@ class SubmitButton extends StatelessWidget {
   const SubmitButton({
     super.key,
     required this.text,
-    required this.onPressed,
+    required this.onPressed, required Widget child,
   });
 
   @override

@@ -4,12 +4,14 @@ class MultilineInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final int maxLength;
+  final String? hintText;
 
   const MultilineInputField({
     super.key,
     required this.label,
     required this.controller,
-    this.maxLength = 500, // ✅ valor por defecto
+    this.maxLength = 500,
+    this.hintText,
   });
 
   @override
@@ -19,11 +21,12 @@ class MultilineInputField extends StatelessWidget {
       child: TextField(
         controller: controller,
         maxLines: 4,
-        maxLength: maxLength, // límite de caracteres
+        maxLength: maxLength,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           border: const OutlineInputBorder(),
-          counterText: "", // opcional: oculta el contador visual abajo
+          counterText: "",
         ),
       ),
     );

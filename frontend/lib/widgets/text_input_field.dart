@@ -11,7 +11,7 @@ class TextInputField extends StatelessWidget {
     required this.label,
     required this.controller,
     this.keyboardType,
-    this.enabled = true, // ✅ habilitado por defecto
+    this.enabled = true,
   });
 
   @override

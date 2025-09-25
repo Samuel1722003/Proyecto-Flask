@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,163 +11,182 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  bool isLoading = false;
-  bool isPasswordVisible = false;
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-void _login() async {
-  if (_formKey.currentState!.validate()) {
-    final email = emailController.text;
-    final password = passwordController.text;
+    setState(() => _isLoading = true);
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
     final result = await ApiService.login(email, password);
 
+    debugPrint("🔍 Resultado del login: $result");
+
     if (result.containsKey("token")) {
-      await ApiService.saveToken(result["token"]);
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login exitoso")),
-      );
-      // ignore: use_build_context_synchronously
+      // Guardar token en local
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("auth_token", result["token"]);
+      await prefs.setInt("user_id", result["user_id"]);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Login exitoso")));
+
+      // Limpiar los campos
+      _emailController.clear();
+      _passwordController.clear();
+
       Navigator.pushReplacementNamed(context, "ProjectConfigScreen");
     } else {
-      // ignore: use_build_context_synchronously
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${result['msg']}")),
+        SnackBar(content: Text("Error en login: ${result['msg']}")),
       );
-    }
-  }
-}
 
+      // Limpiar la contraseña para volver a ingresarla
+      _passwordController.clear();
+    }
+
+    setState(() => _isLoading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final double maxWidth = 350; // ancho máximo de los inputs
 
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Card(
-            elevation: 6,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(  
-                      'confie_logotipo.png',
-                      height: 100,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Form(
+            key: _formKey,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset("confie_logotipo.png", height: 100),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "PLATAFORMA INTERACTIVA PARA EL DISEÑO DE PROPUESTAS TECNOLÓGICAS INNOVADORAS",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 1, 7, 19),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Iniciar Sesión",
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: "Correo electrónico",
-                        prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    "Iniciar Sesión",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 22),
+
+                  // Campo correo
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: "Correo electrónico",
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Por favor ingresa tu correo";
-                        }
-                        if (!value.contains("@")) {
-                          return "Correo inválido";
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: passwordController,
-                      obscureText: !isPasswordVisible,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: "Contraseña",
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isPasswordVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () async {
-                            try {
-    final result = await ApiService.login(
-      emailController.text,
-      passwordController.text,
-    );
-    // ignore: avoid_print
-    print("Login OK: $result");
-  } catch (e) {
-    // ignore: avoid_print
-    print("Error: $e");
-  }
-                          },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Por favor ingrese su correo";
+                      }
+                      if (!value.contains("@")) {
+                        return "Correo inválido";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Campo contraseña
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: "Contraseña",
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Por favor ingrese su contraseña";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 22),
+
+                  // Botón ingresar
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          216,
+                          129,
+                          30,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Por favor ingresa tu contraseña";
-                        }
-                        if (value.length < 4) {
-                          return "La contraseña debe tener al menos 4 caracteres";
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
+                      child:
+                          _isLoading
+                              ? const SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
+                                  color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                "Ingresar",
-                                style: TextStyle(fontSize: 16),
-                              ),
-                      ),
+                              : const Text("Ingresar"),
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, 'RegisterScreen');
-                      },
-                      child: const Text("¿No tienes cuenta? Regístrate"),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Link a registro
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "RegisterScreen");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color.fromARGB(255, 71, 42, 8),
                     ),
-                  ],
-                ),
+                    child: const Text("¿No tienes cuenta? Regístrate aquí"),
+                  ),
+                ],
               ),
             ),
           ),
